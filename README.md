@@ -86,6 +86,30 @@ The app opens **one file**: path from **`DATABASE_URL`** resolved against PM2 **
 
 5. **Media** — Lineup videos and **radar/callouts images** both use DB paths like `/uploads/....` (`videoPath`, `calloutsImagePath`). Copy your whole **`public/uploads/`** folder from PC to the server (`scp -r` or rsync). If the DB says `/uploads/foo.png` but that file isn’t on disk, the radar clip won’t show. Map hero thumbnails are **`public/maps/{slug}.png`** (usually in git); uploads usually are not unless you commit them.
 
+#### snapshot / “import” (sqlite is already a single file)
+
+There’s no separate database import step like Postgres. **Your whole DB is `data/cshelper.db`** — copying that file **is** the snapshot. “Import” on the server means: stop PM2, overwrite `data/cshelper.db`, optionally delete `*.db-wal` / `*.db-shm`, start PM2.
+
+What **cannot** fit inside that file are the **actual video/image bytes**. The DB only stores **paths** (strings). So you always copy **`public/uploads/`** too, or radar/lineups break even with a perfect DB copy.
+
+**One archive with DB + uploads** (from project root on your PC):
+
+```powershell
+tar -czvf cshelper-state.tgz data/cshelper.db public/uploads
+```
+
+Copy `cshelper-state.tgz` to the VPS, then:
+
+```bash
+pm2 stop cshelper
+cd /var/www/cshelper
+tar -xzvf ~/cshelper-state.tgz
+rm -f data/cshelper.db-wal data/cshelper.db-shm
+pm2 start cshelper
+```
+
+Adjust paths if your app lives somewhere other than `/var/www/cshelper`.
+
 ## map thumbnails
 
 files are `public/maps/{slug}.png`. they're based on [MurkyYT/cs2-map-icons](https://github.com/MurkyYT/cs2-map-icons). after you swap pngs:
