@@ -42,7 +42,6 @@ yarn-error.log*
 next-env.d.ts
 
 /data/
-/public/uploads/
 
 # local scratch
 scripts/__pycache__/

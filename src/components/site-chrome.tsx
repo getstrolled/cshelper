@@ -10,7 +10,7 @@ export function SiteNav() {
           className="flex items-center gap-2.5 text-lg font-semibold text-stone-100"
         >
           <Image
-            src="/icon.svg"
+            src="/icon.png"
             alt=""
             width={32}
             height={32}

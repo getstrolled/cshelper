@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: "cshelper",
   description: "small cs2 helper for friends: maps + lineups",
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    icon: [{ url: "/icon.png", type: "image/png" }],
   },
 };
 
