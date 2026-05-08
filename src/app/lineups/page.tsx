@@ -101,9 +101,8 @@ export default async function LineupsPage({ searchParams }: Props) {
             name="map"
             defaultValue={sp.map ?? ""}
             className={inputSelect}
-            required
           >
-            <option value="">map…</option>
+            <option value="">all maps</option>
             {mapRows.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name}
@@ -142,10 +141,10 @@ export default async function LineupsPage({ searchParams }: Props) {
         </button>
       </form>
 
-      {!mapSelected ? (
-        <p className="text-stone-400">No map selected.</p>
-      ) : rows.length === 0 ? (
+      {joined.length === 0 ? (
         <p className="text-stone-400">{EMPTY_CONTRIBUTE}</p>
+      ) : rows.length === 0 ? (
+        <p className="text-stone-400">Nothing matches those filters.</p>
       ) : (
         <ul className="flex flex-col gap-8">
           {rows.map(({ lineup: l, mapName, mapSlug }) => (

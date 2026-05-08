@@ -84,7 +84,7 @@ The app opens **one file**: path from **`DATABASE_URL`** resolved against PM2 **
 
 4. **`DATABASE_URL` vs cwd** — Using `file:./data/cshelper.db` means **`/var/www/cshelper/data/cshelper.db`**. Using `file:/var/www/cshelper/data/cshelper.db` is fine too; both must point at the file you actually copied.
 
-5. **Media** — Lineups store paths like `/uploads/....`. Copy **`public/uploads/`** from your PC to the server `public/uploads/` or those clips won’t load even when DB rows exist.
+5. **Media** — Lineup videos and **radar/callouts images** both use DB paths like `/uploads/....` (`videoPath`, `calloutsImagePath`). Copy your whole **`public/uploads/`** folder from PC to the server (`scp -r` or rsync). If the DB says `/uploads/foo.png` but that file isn’t on disk, the radar clip won’t show. Map hero thumbnails are **`public/maps/{slug}.png`** (usually in git); uploads usually are not unless you commit them.
 
 ## map thumbnails
 
