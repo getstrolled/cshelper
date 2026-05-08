@@ -1,3 +1,4 @@
+import { LineupVideoPrefetch } from "@/components/lineup-video-prefetch";
 import { resolveAssetUrl } from "@/lib/asset-url";
 import { getDb } from "@/lib/db";
 import { lineups, maps } from "@/lib/db/schema";
@@ -109,6 +110,21 @@ export default async function LineupsPage({ searchParams }: Props) {
     );
   }
 
+  const prefetchClips = (() => {
+    const seen = new Set<string>();
+    const out: { url: string; title: string }[] = [];
+    for (const r of rows) {
+      const p = r.lineup.videoPath;
+      if (!p.startsWith("/uploads/")) continue;
+      if (!publicFileExists(p)) continue;
+      const url = resolveAssetUrl(p);
+      if (seen.has(url)) continue;
+      seen.add(url);
+      out.push({ url, title: r.lineup.title });
+    }
+    return out;
+  })();
+
   return (
     <main className="flex flex-1 flex-col gap-6">
       <div>
@@ -164,6 +180,10 @@ export default async function LineupsPage({ searchParams }: Props) {
           go
         </button>
       </form>
+
+      {joined.length > 0 && rows.length > 0 ? (
+        <LineupVideoPrefetch clips={prefetchClips} />
+      ) : null}
 
       {joined.length === 0 ? (
         <p className="text-stone-400">{EMPTY_CONTRIBUTE}</p>
