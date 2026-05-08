@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db";
 import { lineups, maps } from "@/lib/db/schema";
+import { publicFileExists } from "@/lib/public-file";
 import { asc, eq } from "drizzle-orm";
 import Link from "next/link";
 
@@ -11,7 +12,15 @@ const EMPTY_CONTRIBUTE = (
   </>
 );
 
-function LineupClip({ src, title }: { src: string; title: string }) {
+function LineupClip({
+  src,
+  title,
+  fileMissing,
+}: {
+  src: string;
+  title: string;
+  fileMissing?: boolean;
+}) {
   if (!src.startsWith("/uploads/")) {
     return (
       <div className="border-t border-stone-800 bg-stone-950 px-4 py-5">
@@ -22,6 +31,18 @@ function LineupClip({ src, title }: { src: string; title: string }) {
           </Link>{" "}
           with an uploaded video path (<code className="text-stone-400">/uploads/…</code>
           ).
+        </p>
+      </div>
+    );
+  }
+
+  if (fileMissing) {
+    return (
+      <div className="border-t border-stone-800 bg-stone-950 px-4 py-5">
+        <p className="text-sm text-amber-200/90">
+          DB path <code className="text-stone-300">{src}</code> has no matching file under{" "}
+          <code className="text-stone-300">public/</code> on this server. Copy{" "}
+          <code className="text-stone-300">public/uploads/</code> from your PC (same paths).
         </p>
       </div>
     );
@@ -168,7 +189,13 @@ export default async function LineupsPage({ searchParams }: Props) {
                   <p className="mt-2 text-sm text-stone-300">{l.description}</p>
                 ) : null}
               </div>
-              <LineupClip src={l.videoPath} title={l.title} />
+              <LineupClip
+                src={l.videoPath}
+                title={l.title}
+                fileMissing={
+                  l.videoPath.startsWith("/uploads/") && !publicFileExists(l.videoPath)
+                }
+              />
             </li>
           ))}
         </ul>

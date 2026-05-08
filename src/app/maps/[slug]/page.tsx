@@ -1,6 +1,7 @@
 import { ZoomableRadarImage } from "@/components/zoomable-radar-image";
 import { getDb } from "@/lib/db";
 import { maps } from "@/lib/db/schema";
+import { publicFileExists } from "@/lib/public-file";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -16,6 +17,7 @@ export default async function MapDetailPage({ params }: Props) {
   if (!map) notFound();
 
   const callsSrc = map.calloutsImagePath?.trim();
+  const callsPathOk = Boolean(callsSrc && publicFileExists(callsSrc));
 
   return (
     <main className="flex flex-1 flex-col gap-6">
@@ -33,9 +35,20 @@ export default async function MapDetailPage({ params }: Props) {
           calls
         </h2>
         {callsSrc ? (
-          <div className="mt-4">
-            <ZoomableRadarImage src={callsSrc} alt={`${map.name} callouts`} />
-          </div>
+          callsPathOk ? (
+            <div className="mt-4">
+              <ZoomableRadarImage src={callsSrc} alt={`${map.name} callouts`} />
+            </div>
+          ) : (
+            <div className="mt-4 rounded-lg border border-amber-900/50 bg-amber-950/40 px-4 py-3 text-sm text-amber-100">
+              <p>
+                DB points to <code className="text-amber-50">{callsSrc}</code> but that file is not on this
+                server under <code className="text-amber-50">public/</code>. Copy your{" "}
+                <code className="text-amber-50">public/uploads/</code> folder here (same layout as your PC),
+                then refresh.
+              </p>
+            </div>
+          )
         ) : (
           <p className="mt-4 text-stone-400">
             Nothing yet — dm <span className="text-stone-300">@get_strolled</span> if you want to
