@@ -148,6 +148,8 @@ From the machine that has **`public/uploads/`** and **`public/maps/`** filled (u
 npm run r2:migrate
 ```
 
+If you see **`Cannot find module '@aws-sdk/client-s3'`**, run **`git pull`** then **`npm ci`** (or **`npm install`**) in the project root — **`node_modules`** must include **`@aws-sdk/client-s3`** from **`package-lock.json`**.
+
 That uploads **`public/uploads/**`** as keys **`uploads/...`** and **`public/maps/**`** as **`maps/...`**, matching the paths stored in the DB. **No SQL migration.**
 
 3. Deploy env to production and **`pm2 restart cshelper --update-env`**.
