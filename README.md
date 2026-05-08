@@ -20,6 +20,18 @@ videos for lineups are mp4/webm/etc in `public/uploads/`, not an embed service.
 
 full list + placeholders: **`.env.example`**
 
+### pm2 on the server
+
+Put **`SESSION_SECRET`** (32+ chars) and passwords in **`.env.local`** or **`.env.production`** in the **project root** next to `package.json`. Next.js loads those files when `next start` runs from that directory.
+
+After you change env vars:
+
+```bash
+pm2 restart cshelper --update-env
+```
+
+If `/edit` still complains about `SESSION_SECRET`, Node is not seeing the file (wrong cwd, file in the wrong folder, typo in name, or secret shorter than 32 characters after trimming spaces).
+
 ## map thumbnails
 
 files are `public/maps/{slug}.png`. they're based on [MurkyYT/cs2-map-icons](https://github.com/MurkyYT/cs2-map-icons). after you swap pngs:
