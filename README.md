@@ -1,0 +1,49 @@
+# cshelper
+
+little cs2 helper for friends: map pages with callouts + a lineups section.
+
+the seeded sqlite db already has **callouts** in a good state, and **mirage smokes** are wired up in there too. change whatever you want from `/edit` once you're logged in.
+
+## local dev
+
+1. copy `.env.example` to `.env.local` and fill it in (`SESSION_SECRET` must be 32+ chars or sessions break)
+2. `npm install`
+3. `npm run db:push`
+4. `npm run seed` if you want the default maps bootstrapped
+5. `npm run dev` → http://localhost:1337
+
+`/edit` passwords come from env (`CSHELPER_HELPER_PASSWORD`, etc.) — they're not the same across roles.
+
+videos for lineups are mp4/webm/etc in `public/uploads/`, not an embed service.
+
+## env
+
+full list + placeholders: **`.env.example`**
+
+## map thumbnails
+
+files are `public/maps/{slug}.png`. they're based on [MurkyYT/cs2-map-icons](https://github.com/MurkyYT/cs2-map-icons). after you swap pngs:
+
+```bash
+npm run maps:images:apply
+```
+
+redownload on windows:
+
+```powershell
+pwsh -File scripts/download-map-images.ps1
+```
+
+## throwing it on a vps
+
+```bash
+npm ci
+npm run db:push
+npm run seed   # if empty
+npm run build
+NODE_ENV=production npm start
+```
+
+put nginx (or caddy, whatever) in front and proxy to the node port. dont commit `.env.local`; set vars on the server.
+
+optional: `POST /api/backup` with `Authorization: Bearer …` if `BACKUP_CRON_SECRET` is set — dont spam it.
