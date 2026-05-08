@@ -12,9 +12,11 @@
     "db:studio": "drizzle-kit studio",
     "seed": "tsx scripts/seed.ts",
     "maps:sync": "tsx scripts/sync-map-pool.ts",
-    "maps:images:apply": "tsx scripts/apply-map-images.ts"
+    "maps:images:apply": "tsx scripts/apply-map-images.ts",
+    "r2:migrate": "tsx scripts/migrate-to-r2.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1045.0",
     "better-sqlite3": "^12.9.0",
     "drizzle-orm": "^0.45.2",
     "iron-session": "^8.0.4",

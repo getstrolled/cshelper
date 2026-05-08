@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/auth";
 import { notifyActivity } from "@/lib/discord";
 import { clientIp } from "@/lib/ip";
 import { consumeUnlessAdmin, uploadLimiter } from "@/lib/rate-limit";
+import { putR2Object, r2UploadConfigured } from "@/lib/r2";
 import { NextRequest, NextResponse } from "next/server";
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -78,12 +79,21 @@ export async function POST(req: NextRequest) {
   const buf = Buffer.from(await file.arrayBuffer());
   const safeExt = /^\.[a-z0-9]+$/i.test(ext) ? ext : looksVideo ? ".mp4" : ".png";
   const name = `${randomUUID()}${safeExt}`;
-  const dir = path.join(process.cwd(), "public", "uploads");
-  await fs.mkdir(dir, { recursive: true });
-  const fp = path.join(dir, name);
-  await fs.writeFile(fp, buf);
-
   const publicPath = `/uploads/${name}`;
+
+  if (r2UploadConfigured()) {
+    const key = `uploads/${name}`;
+    const contentType =
+      file.type?.trim() ||
+      (looksVideo ? "video/mp4" : "application/octet-stream");
+    await putR2Object(key, buf, contentType);
+  } else {
+    const dir = path.join(process.cwd(), "public", "uploads");
+    await fs.mkdir(dir, { recursive: true });
+    const fp = path.join(dir, name);
+    await fs.writeFile(fp, buf);
+  }
+
   await notifyActivity(`${auth.role} uploaded **${name}**`);
 
   return NextResponse.json({ path: publicPath });

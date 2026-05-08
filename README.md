@@ -90,7 +90,75 @@ The app opens **one file**: path from **`DATABASE_URL`** resolved against PM2 **
 
 There’s no separate database import step like Postgres. **Your whole DB is `data/cshelper.db`** — copying that file **is** the snapshot. “Import” on the server means: stop PM2, overwrite `data/cshelper.db`, optionally delete `*.db-wal` / `*.db-shm`, start PM2.
 
-What **cannot** fit inside that file are the **actual video/image bytes**. The DB only stores **paths** (strings). So you always copy **`public/uploads/`** too, or radar/lineups break even with a perfect DB copy.
+What **cannot** fit inside that file are the **actual video/image bytes**. The DB only stores **paths** (strings). So you always copy **`public/uploads/`** too, or radar/lineups break even with a perfect DB copy — unless you use **cloudflare r2** (below).
+
+### cloudflare r2 (optional)
+
+Use this when you want lineup clips and map images served from **Cloudflare R2** instead of copying **`public/uploads/`** onto the VPS. The SQLite DB **does not change**: it still stores paths like **`/uploads/uuid.mp4`** and **`/maps/dust2.png`**. The app prepends **`R2_PUBLIC_BASE_URL`** when rendering and uploads new files to the bucket when all R2 variables are set.
+
+#### 1. Create the bucket (Cloudflare dashboard)
+
+1. Log in → **R2 Object Storage** → **Create bucket**. Pick a name (e.g. `cshelper-media`). Location default is fine.
+2. Note your **Account ID**: R2 overview sidebar shows **Account ID** (32-char hex). That value is **`R2_ACCOUNT_ID`**.
+
+#### 2. API token for S3-compatible access
+
+1. **R2** → **Overview** → **Manage R2 API Tokens** (or **Account API Tokens** with R2 scope).
+2. Create a token with **Object Read & Write** on this bucket (or all buckets). Save **Access Key ID** and **Secret Access Key** — they map to **`R2_ACCESS_KEY_ID`** and **`R2_SECRET_ACCESS_KEY`**.
+3. **`R2_BUCKET_NAME`** is exactly the bucket name you chose in step 1.
+
+The app uses the S3 API against **`https://<R2_ACCOUNT_ID>.r2.cloudflarestorage.com`** (handled in code; you only need the env vars).
+
+#### 3. Public URL so browsers can load images and videos
+
+R2 buckets are private until you expose them:
+
+- **R2** → your bucket → **Settings** → **Public access** → enable **R2.dev subdomain** (you get a URL like **`https://pub-xxxxxxxx.r2.dev`**), **or** attach a **custom domain** under the same bucket settings.
+
+Set **`R2_PUBLIC_BASE_URL`** to that base URL **with no trailing slash**, e.g.:
+
+```env
+R2_PUBLIC_BASE_URL=https://pub-xxxxxxxx.r2.dev
+```
+
+Rebuild/restart is not strictly required for env-only changes, but after editing env on the server run **`pm2 restart cshelper --update-env`** so **`next.config`** picks up the hostname for **`next/image`** if you changed the public URL.
+
+If **`R2_PUBLIC_BASE_URL`** is missing, the app keeps using relative paths (files must exist under **`public/`** on the server).
+
+#### 4. Env vars (copy into `.env.local` or server `.env.production`)
+
+| Variable | What it is |
+|----------|------------|
+| `R2_ACCOUNT_ID` | Cloudflare account ID from R2 overview |
+| `R2_ACCESS_KEY_ID` | From the R2 API token |
+| `R2_SECRET_ACCESS_KEY` | From the R2 API token |
+| `R2_BUCKET_NAME` | Bucket name |
+| `R2_PUBLIC_BASE_URL` | Public base URL (`https://pub-….r2.dev` or your custom domain), **no trailing slash** |
+
+See **`.env.example`** for commented placeholders.
+
+#### 5. Migrate files already on disk (one-time)
+
+From the machine that has **`public/uploads/`** and **`public/maps/`** filled (usually your PC or the VPS before you delete copies):
+
+1. Put the same **`R2_*`** values in **`.env`** or **`.env.local`** next to **`package.json`**.
+2. Run:
+
+```bash
+npm run r2:migrate
+```
+
+That uploads **`public/uploads/**`** as keys **`uploads/...`** and **`public/maps/**`** as **`maps/...`**, matching the paths stored in the DB. **No SQL migration.**
+
+3. Deploy env to production and **`pm2 restart cshelper --update-env`**.
+
+New uploads from **`/edit`** go straight to R2 when all five variables (including **`R2_PUBLIC_BASE_URL`**) are set; otherwise uploads fall back to **`public/uploads/`** on disk.
+
+#### 6. Quick checks
+
+- Open a lineup page: video should load from **`R2_PUBLIC_BASE_URL`** + **`/uploads/...`** (check DevTools → Network).
+- Map thumbnails and callouts images should load from the same base + **`/maps/...`**.
+- If **`next/image`** blocks R2 URLs, confirm **`R2_PUBLIC_BASE_URL`** was set **before** **`npm run build`** on the server ( **`next.config.ts`** reads it at build time for **`remotePatterns`** ), or rebuild once after setting it.
 
 **One archive with DB + uploads** (from project root on your PC):
 

@@ -1,4 +1,5 @@
 import { ZoomableRadarImage } from "@/components/zoomable-radar-image";
+import { resolveAssetUrl } from "@/lib/asset-url";
 import { getDb } from "@/lib/db";
 import { maps } from "@/lib/db/schema";
 import { publicFileExists } from "@/lib/public-file";
@@ -18,6 +19,7 @@ export default async function MapDetailPage({ params }: Props) {
 
   const callsSrc = map.calloutsImagePath?.trim();
   const callsPathOk = Boolean(callsSrc && publicFileExists(callsSrc));
+  const callsResolved = callsSrc ? resolveAssetUrl(callsSrc) : "";
 
   return (
     <main className="flex flex-1 flex-col gap-6">
@@ -37,7 +39,7 @@ export default async function MapDetailPage({ params }: Props) {
         {callsSrc ? (
           callsPathOk ? (
             <div className="mt-4">
-              <ZoomableRadarImage src={callsSrc} alt={`${map.name} callouts`} />
+              <ZoomableRadarImage src={callsResolved} alt={`${map.name} callouts`} />
             </div>
           ) : (
             <div className="mt-4 rounded-lg border border-amber-900/50 bg-amber-950/40 px-4 py-3 text-sm text-amber-100">

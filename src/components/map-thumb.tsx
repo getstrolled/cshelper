@@ -1,7 +1,10 @@
+import { resolveAssetUrl } from "@/lib/asset-url";
 import Image from "next/image";
 
 export function mapPreviewSrc(imagePath: string | null | undefined): string {
-  return imagePath && imagePath.length > 0 ? imagePath : "/maps/placeholder.svg";
+  const raw =
+    imagePath && imagePath.length > 0 ? imagePath : "/maps/placeholder.svg";
+  return resolveAssetUrl(raw);
 }
 
 export function MapThumb({

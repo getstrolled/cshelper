@@ -1,3 +1,4 @@
+import { resolveAssetUrl } from "@/lib/asset-url";
 import { getDb } from "@/lib/db";
 import { lineups, maps } from "@/lib/db/schema";
 import { publicFileExists } from "@/lib/public-file";
@@ -48,11 +49,13 @@ function LineupClip({
     );
   }
 
+  const streamSrc = resolveAssetUrl(src);
+
   return (
     <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
       <video
         title={`clip — ${title}`}
-        src={src}
+        src={streamSrc}
         controls
         playsInline
         preload="metadata"
