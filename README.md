@@ -32,6 +32,31 @@ pm2 restart cshelper --update-env
 
 If `/edit` still complains about `SESSION_SECRET`, Node is not seeing the file (wrong cwd, file in the wrong folder, typo in name, or secret shorter than 32 characters after trimming spaces).
 
+**check length on the server** (from project root; prints length only, not the value):
+
+```bash
+node <<'EOF'
+const fs = require("fs");
+for (const f of [".env.local", ".env.production"]) {
+  try {
+    const t = fs.readFileSync(f, "utf8");
+    const m = t.match(/^SESSION_SECRET=(.*)$/m);
+    if (!m) continue;
+    let v = m[1].trim();
+    if (v.length >= 2 && ((v[0] === '"' && v.endsWith('"')) || (v[0] === "'" && v.endsWith("'")))) {
+      v = v.slice(1, -1).trim();
+    }
+    console.log(f + ": length=" + v.length);
+    process.exit(0);
+  } catch (_) {}
+}
+console.log("no SESSION_SECRET= line found");
+process.exit(1);
+EOF
+```
+
+Run **`pm2 restart cshelper --update-env`** as its **own** command after you save env files. Do not paste `pm2 ...` inside `node -e "..."` (that causes a SyntaxError).
+
 ## map thumbnails
 
 files are `public/maps/{slug}.png`. they're based on [MurkyYT/cs2-map-icons](https://github.com/MurkyYT/cs2-map-icons). after you swap pngs:
