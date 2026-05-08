@@ -79,4 +79,19 @@ NODE_ENV=production npm start
 
 put nginx (or caddy, whatever) in front and proxy to the node port. dont commit `.env.local`; copy env vars on the server (e.g. `.env.production` or systemd `Environment=`).
 
+### nginx + Next.js (read this if `/maps` or client nav breaks)
+
+This app is **not** a static SPA. Use **one** block like:
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:3001;
+    ...
+}
+```
+
+Use **`proxy_pass http://127.0.0.1:3001`** with **no trailing slash** after the port. If you use `http://127.0.0.1:3001/` (slash at the end), paths like `/maps` and `/_next/static/...` break and you only see the home page work.
+
+Do **not** add `try_files ... /index.html` for this project.
+
 optional: `POST /api/backup` with `Authorization: Bearer <secret>` if `BACKUP_CRON_SECRET` is set. dont spam it.

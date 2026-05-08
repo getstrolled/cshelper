@@ -4,7 +4,10 @@ import { SiteFooter, SiteNav } from "@/components/site-chrome";
 
 export const metadata: Metadata = {
   title: "cshelper",
-  description: "small cs2 helper for friends — maps + lineups",
+  description: "small cs2 helper for friends: maps + lineups",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+  },
 };
 
 export const viewport: Viewport = {
