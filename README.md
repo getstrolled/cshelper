@@ -12,7 +12,7 @@ the seeded sqlite db already has **callouts** in a good state, and **mirage smok
 4. `npm run seed` if you want the default maps bootstrapped
 5. `npm run dev` → http://localhost:1337
 
-`/edit` passwords come from env (`CSHELPER_HELPER_PASSWORD`, etc.) — they're not the same across roles.
+`/edit` passwords come from env (`CSHELPER_HELPER_PASSWORD`, etc.). they're not the same across roles.
 
 videos for lineups are mp4/webm/etc in `public/uploads/`, not an embed service.
 
@@ -36,6 +36,39 @@ pwsh -File scripts/download-map-images.ps1
 
 ## throwing it on a vps
 
+### grab the repo on the server
+
+**first time** (pick a folder, e.g. `/var/www` or your home dir):
+
+```bash
+git clone https://github.com/getstrolled/cshelper.git
+cd cshelper
+```
+
+uses the same ssh/https setup you already use for other repos. if you use ssh remotes:
+
+```bash
+git clone git@github.com:getstrolled/cshelper.git
+cd cshelper
+```
+
+**later, when you already cloned it** (ssh into vps, go to the project folder):
+
+```bash
+cd /path/to/cshelper
+git pull origin master
+```
+
+then reinstall/build if `package-lock.json` changed:
+
+```bash
+npm ci
+npm run build
+# restart whatever runs `npm start` (systemd, pm2, etc.)
+```
+
+### run it
+
 ```bash
 npm ci
 npm run db:push
@@ -44,6 +77,6 @@ npm run build
 NODE_ENV=production npm start
 ```
 
-put nginx (or caddy, whatever) in front and proxy to the node port. dont commit `.env.local`; set vars on the server.
+put nginx (or caddy, whatever) in front and proxy to the node port. dont commit `.env.local`; copy env vars on the server (e.g. `.env.production` or systemd `Environment=`).
 
-optional: `POST /api/backup` with `Authorization: Bearer …` if `BACKUP_CRON_SECRET` is set — dont spam it.
+optional: `POST /api/backup` with `Authorization: Bearer <secret>` if `BACKUP_CRON_SECRET` is set. dont spam it.
