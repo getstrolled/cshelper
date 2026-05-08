@@ -14,6 +14,9 @@ function dbFilePath(): string {
 export function getSqlite(): Database.Database {
   if (!sqlite) {
     const fp = path.resolve(process.cwd(), dbFilePath());
+    if (process.env.NODE_ENV === "production") {
+      console.info("[cshelper] sqlite:", fp);
+    }
     fs.mkdirSync(path.dirname(fp), { recursive: true });
     sqlite = new Database(fp);
     sqlite.pragma("journal_mode = WAL");

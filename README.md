@@ -57,6 +57,35 @@ EOF
 
 Run **`pm2 restart cshelper --update-env`** as its **own** command after you save env files. Do not paste `pm2 ...` inside `node -e "..."` (that causes a SyntaxError).
 
+### sqlite data looks empty on the server but works locally
+
+The app opens **one file**: path from **`DATABASE_URL`** resolved against PM2 **`cwd`** (project root). If that file is empty or not your copy, maps/lineups look blank.
+
+1. **Confirm what Node opens** — after deploy, check logs once:
+   ```bash
+   pm2 logs cshelper --lines 30
+   ```
+   You should see a line like `[cshelper] sqlite: /var/www/cshelper/data/cshelper.db`. That path must be where you uploaded your real `.db`.
+
+2. **Confirm rows in that exact file** (same path as step 1):
+   ```bash
+   sqlite3 /var/www/cshelper/data/cshelper.db "SELECT COUNT(*) FROM maps;"
+   sqlite3 /var/www/cshelper/data/cshelper.db "SELECT COUNT(*) FROM lineups;"
+   ```
+   If `no such table`, run **`npm run db:push`** once, or you copied a corrupt/old file. If counts are **0**, you’re looking at the wrong file or an empty copy.
+
+3. **Replace DB safely**
+   ```bash
+   pm2 stop cshelper
+   # copy your PC’s data/cshelper.db over this path (scp/rsync)
+   chown root:root /var/www/cshelper/data/cshelper.db   # or your service user
+   pm2 start cshelper
+   ```
+
+4. **`DATABASE_URL` vs cwd** — Using `file:./data/cshelper.db` means **`/var/www/cshelper/data/cshelper.db`**. Using `file:/var/www/cshelper/data/cshelper.db` is fine too; both must point at the file you actually copied.
+
+5. **Media** — Lineups store paths like `/uploads/....`. Copy **`public/uploads/`** from your PC to the server `public/uploads/` or those clips won’t load even when DB rows exist.
+
 ## map thumbnails
 
 files are `public/maps/{slug}.png`. they're based on [MurkyYT/cs2-map-icons](https://github.com/MurkyYT/cs2-map-icons). after you swap pngs:
